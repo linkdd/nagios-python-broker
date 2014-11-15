@@ -51,7 +51,7 @@ static void nebmodule_deregister (void)
     }
 }
 
-static int nebmodule_main (NebModule *handle)
+static int nebmodule_main (nebmodule *handle)
 {
     nebmodule_register (handle);
 
@@ -68,9 +68,9 @@ int nebmodule_init (
     Py_SetProgramName ("nagios-python-broker");
     Py_Initialize ();
 
-    NebModuleType_Initialize (module);
+    /* NebModuleType_Initialize (module); */
 
-    return nebmodule_main (module);
+    return nebmodule_main (handle);
 }
 
 int nebmodule_deinit (
