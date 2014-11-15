@@ -3,6 +3,9 @@ Nagios-Python-Broker
 
 Provides an *Event Broker* for **Nagios** with a Python API.
 
+.. image:: https://travis-ci.org/linkdd/nagios-python-broker.svg?branch=develop
+    :target: https://travis-ci.org/linkdd/nagios-python-broker
+
 Technical Description
 ---------------------
 
