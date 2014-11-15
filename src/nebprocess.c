@@ -39,7 +39,7 @@ static PyGetSetDef NebProcess_getseters[] =
     { NULL }
 };
 
-static PyTypeObject NebProcessType =
+static PyTypeObject _NebProcessType =
 {
     PyObject_HEAD_INIT (NULL)
     0,
@@ -82,17 +82,19 @@ static PyTypeObject NebProcessType =
     NebProcess_new
 };
 
+PyTypeObject *NebProcessType = &_NebProcessType;
+
 /* implementation */
 
 void NebProcessType_Initialize (PyObject *namespace)
 {
-    if (PyType_Ready (&NebProcessType) < 0)
+    if (PyType_Ready (NebProcessType) < 0)
     {
         return;
     }
 
-    Py_INCREF (&NebProcessType);
-    PyModule_AddObject (namespace, "NebProcess", (PyObject *) (&NebProcessType));
+    Py_INCREF (NebProcessType);
+    PyModule_AddObject (namespace, "NebProcess", (PyObject *) (NebProcessType));
 }
 
 static void NebProcess_dealloc (NebProcess *self)
@@ -166,10 +168,14 @@ static PyObject *NebProcess_get_timestamp (NebProcess *self)
 
 PyObject *NebProcess_New (nebstruct_process_data *data)
 {
-    PyObject *nebprocess = Py_BuildValue ("0&", data);
+    PyObject *arguments = Py_BuildValue ("(0&)", data);
 
-    return PyObject_CallObject (
-        (PyObject *) (&NebProcessType),
-        nebprocess
+    PyObject *self = PyObject_CallObject (
+        (PyObject *) (NebProcessType),
+        arguments
     );
+
+    Py_DECREF (arguments);
+
+    return self;
 }

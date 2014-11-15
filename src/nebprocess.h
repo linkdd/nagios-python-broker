@@ -4,6 +4,7 @@
 #include <nagios/nebstructs.h>
 #include <Python.h>
 
+extern PyTypeObject *NebProcessType;
 typedef struct _NebProcess NebProcess;
 
 void NebProcessType_Initialize (PyObject *namespace);
