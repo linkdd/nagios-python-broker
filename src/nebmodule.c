@@ -38,7 +38,7 @@ static int NebModule_init (NebModule *self, PyObject *args, PyObject *kwargs);
 
 static PyObject *NebModule_should_be_loaded (NebModule *self);
 static PyObject *NebModule_is_currently_loaded (NebModule *self);
-static PyObject *NebModule_call (NebModule *self, PyObject *evtype);
+static PyObject *NebModule_call (NebModule *self, PyObject *args, PyObject *kwargs);
 
 /* properties */
 static PyObject *NebModule_get_filename (NebModule *self);
@@ -50,7 +50,7 @@ static PyMethodDef NebModule_methods[] =
 {
     { "should_be_loaded", (PyCFunction) NebModule_should_be_loaded, METH_NOARGS, NULL },
     { "is_currently_loaded", (PyCFunction) NebModule_is_currently_loaded, METH_NOARGS, NULL },
-    { "__call__", (PyCFunction) NebModule_call, METH_O, NULL },
+    { "__call__", (PyCFunction) NebModule_call, METH_VARARGS, NULL },
     { NULL }
 };
 
@@ -174,7 +174,7 @@ static PyObject *NebModule_get_args (NebModule *self)
     return NULL;
 }
 
-static PyObject *NebModule_threadid (NebModule *self)
+static PyObject *NebModule_get_threadid (NebModule *self)
 {
     if (self->handle)
     {
@@ -200,9 +200,27 @@ static PyObject *NebModule_is_currently_loaded (NebModule *self)
     return (self->handle && self->handle->is_currently_loaded ? Py_True : Py_False);
 }
 
-static PyObject *NebModule_call (NebModule *self, PyObject *evtype)
+static PyObject *NebModule_call (NebModule *self, PyObject *args, PyObject *kwargs)
 {
-    return PyInt_FromLong (0);
+    static char *kwlist[] = { "evtype", "data", NULL };
+    PyObject *method = NULL, *arguments = NULL, *ret = NULL;
+
+    int evtype = -1;
+    void *data = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords (args, kwargs, "|iO&", kwlist, &evtype, &data))
+    {
+        return PyInt_FromLong (-1);
+    }
+
+    method = PyObject_CallMethod ((PyObject *) self, "methodForEventType", "(i)", evtype);
+
+    arguments = Py_BuildValue ("(O&)", data);
+    ret = PyObject_CallObject (method, arguments);
+    Py_DECREF (arguments);
+    Py_DECREF (method);
+
+    return ret;
 }
 
 nebmodule *NebModule_GetHandle (NebModule *self)
