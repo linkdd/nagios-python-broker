@@ -22,6 +22,7 @@
  */
 
 #include "module.h"
+#include "logging.h"
 #include "nebmodule.h"
 #include <Python.h>
 
@@ -48,6 +49,8 @@ static void nebmodule_register (NebModule *pyhandle)
     nebmodule *handle = NebModule_GetHandle (pyhandle);
     int nebcallback;
 
+    nebmodule_log_info ("Register callbacks");
+
     /* NEB callbacks are identified as int by macros, 0 to 4 is reserved */
     for (nebcallback = 5 ; nebcallback < NEBCALLBACK_NUMITEMS ; ++nebcallback)
     {
@@ -58,6 +61,8 @@ static void nebmodule_register (NebModule *pyhandle)
 static void nebmodule_deregister (void)
 {
     int nebcallback;
+
+    nebmodule_log_info ("Deregister callbacks");
 
     /* NEB callbacks are identified as int by macros, 0 to 4 is reserved */
     for (nebcallback = 5 ; nebcallback < NEBCALLBACK_NUMITEMS ; ++nebcallback)
@@ -91,11 +96,14 @@ int nebmodule_init (
     Py_SetProgramName ("nagios-python-broker");
     Py_Initialize ();
 
+    nebmodule_log_info ("nagios-python-broker initializing...");
+
     /* create python module */
     module = PyModule_New ("nagios_python_broker");
 
     if (module == NULL)
     {
+        nebmodule_log_error ("Impossible to create nagios_python_broker module");
         return -1;
     }
 
@@ -107,12 +115,15 @@ int nebmodule_init (
 
     if (usermodule == NULL)
     {
+        nebmodule_log_error ("Impossible to load user module");
+        nebmodule_log_exception ();
         return -1;
     }
 
     PyModule_AddObject (module, "usermodule", usermodule);
 
-    /* initialize python nebmodule handle */
+    nebmodule_log_int ("Initialize Python NEB module");
+
     UserNebModule = PyObject_GetAttrString (usermodule, "get_handle");
     Py_DECREF (usermodule);
 
@@ -131,7 +142,8 @@ int nebmodule_deinit (
     int flags __attribute__ ((__unused__)),
     int reason __attribute__ ((__unused__)))
 {
-    nebmodule_deregister ();
+    nebmodule_log_info ("nagios-python-broker deinitializing");
 
+    nebmodule_deregister ();
     Py_Finalize ();
 }
