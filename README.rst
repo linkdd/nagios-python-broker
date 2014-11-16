@@ -1,7 +1,7 @@
 Nagios-Python-Broker
 ====================
 
-Provides an *Event Broker* for **Nagios** with a Python API.
+Provides an *Event Broker* for **Nagios**/**Icinga** with a Python API.
 
 .. image:: https://travis-ci.org/linkdd/nagios-python-broker.svg?branch=develop
     :target: https://travis-ci.org/linkdd/nagios-python-broker
