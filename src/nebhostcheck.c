@@ -136,7 +136,7 @@ static PyObject *NebHostCheck_new (PyTypeObject *type, PyObject *args, PyObject 
 
 static int NebHostCheck_init (NebHostCheck *self, PyObject *args, PyObject *kwargs)
 {
-    int ret = NebProcessType->tp_init (self, args, kwargs));
+    int ret = NebProcessType->tp_init (self, args, kwargs);
 
     if (ret == 0)
     {

@@ -22,15 +22,30 @@
  */
 
 #include "module.h"
+#include "nebmodule.h"
 #include <Python.h>
 
 static int nebmodule_callback (int event_type, void *data)
 {
-    return 0;
+    PyObject *module = PyImport_ImportModule ("nagios_python_broker");
+    PyObject *handle = PyObject_GetAttrString (module, "handle");
+    PyObject *ret = PyObject_CallMethod (
+        handle, "__call__",
+        "iO&", event_type, data
+    );
+
+    int retval = PyInt_AsLong (ret);
+    
+    Py_DECREF (ret);
+    Py_DECREF (handle);
+    Py_DECREF (module);
+
+    return retval;
 }
 
-static void nebmodule_register (nebmodule *handle)
+static void nebmodule_register (NebModule *pyhandle)
 {
+    nebmodule *handle = NebModule_GetHandle (pyhandle);
     int nebcallback;
 
     /* NEB callbacks are identified as int by macros, 0 to 4 is reserved */
@@ -51,9 +66,13 @@ static void nebmodule_deregister (void)
     }
 }
 
-static int nebmodule_main (nebmodule *handle)
+static int nebmodule_main (PyObject *module)
 {
+    NebModule *handle = (NebModule *) PyObject_GetAttrString (module, "handle");
+
     nebmodule_register (handle);
+
+    Py_DECREF (handle);
 
     return 0;
 }
@@ -64,13 +83,48 @@ int nebmodule_init (
     nebmodule *handle)
 {
     PyObject *module = NULL;
+    PyObject *usermodule = NULL;
+    PyObject *UserNebModule = NULL;
+    PyObject *arguments = NULL;
+    PyObject *pyhandle = NULL;
 
     Py_SetProgramName ("nagios-python-broker");
     Py_Initialize ();
 
-    /* NebModuleType_Initialize (module); */
+    /* create python module */
+    module = PyModule_New ("nagios_python_broker");
 
-    return nebmodule_main (handle);
+    if (module == NULL)
+    {
+        return -1;
+    }
+
+    /* initializes all data-types in our python module */
+    NebModuleType_Initialize (module);
+
+    /* import user module in our package */
+    usermodule = PyImport_ImportModule (args);
+
+    if (usermodule == NULL)
+    {
+        return -1;
+    }
+
+    PyModule_AddObject (module, "usermodule", usermodule);
+
+    /* initialize python nebmodule handle */
+    UserNebModule = PyObject_GetAttrString (usermodule, "get_handle");
+    Py_DECREF (usermodule);
+
+    arguments = Py_BuildValue ("(O&)", handle);
+    pyhandle = PyObject_CallObject (UserNebModule, arguments);
+    Py_DECREF (arguments);
+    Py_DECREF (UserNebModule);
+
+    PyModule_AddObject (module, "handle", pyhandle);
+    Py_DECREF (pyhandle);
+
+    return nebmodule_main (module);
 }
 
 int nebmodule_deinit (
