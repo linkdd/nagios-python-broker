@@ -24,45 +24,46 @@
 #include "module.h"
 #include "logging.h"
 #include "nebmodule.h"
+#include "nebprocess.h"
 #include <Python.h>
 
 static PyObject *nebmodule_init_constants (PyObject *namespace)
 {
     char *callback_names[NEBCALLBACK_NUMITEMS] =
     {
-        "reserved0",
-        "reserved1",
-        "reserved2",
-        "reserved3",
-        "reserved4",
-        "raw",
-        "neb",
-        "process",
-        "timed_event",
-        "log",
-        "system_command",
-        "event_handler",
-        "notification",
-        "service_check",
-        "host_check",
-        "comment",
-        "downtime",
-        "flapping",
-        "program_status",
-        "host_status",
-        "service_status",
-        "adaptive_program",
-        "adaptive_host",
-        "adaptive_service",
-        "external_command",
-        "aggregated_status",
-        "retention",
-        "contact_notification",
-        "contact_notification_method",
-        "acknowledgement",
-        "state_change",
-        "contact_status",
-        "adaptive_contact"
+        "handle_reserved0",
+        "handle_reserved1",
+        "handle_reserved2",
+        "handle_reserved3",
+        "handle_reserved4",
+        "handle_raw",
+        "handle_neb",
+        "handle_process",
+        "handle_timed_event",
+        "handle_log",
+        "handle_system_command",
+        "handle_event_handler",
+        "handle_notification",
+        "handle_service_check",
+        "handle_host_check",
+        "handle_comment",
+        "handle_downtime",
+        "handle_flapping",
+        "handle_program_status",
+        "handle_host_status",
+        "handle_service_status",
+        "handle_adaptive_program",
+        "handle_adaptive_host",
+        "handle_adaptive_service",
+        "handle_external_command",
+        "handle_aggregated_status",
+        "handle_retention",
+        "handle_contact_notification",
+        "handle_contact_notification_method",
+        "handle_acknowledgement",
+        "handle_state_change",
+        "handle_contact_status",
+        "handle_adaptive_contact"
     };
 
     PyObject *nebcallbacks = PyDict_New ();
@@ -74,6 +75,7 @@ static PyObject *nebmodule_init_constants (PyObject *namespace)
         PyObject *value = PyString_FromString (callback_names[nebcallback]);
 
         PyDict_SetItem (nebcallbacks, key, value);
+        PyDict_SetItem (nebcallbacks, value, key);
 
         Py_DECREF (value);
         Py_DECREF (key);
@@ -87,7 +89,21 @@ static PyObject *nebmodule_init_constants (PyObject *namespace)
 
 static PyObject *nebmodule_init_types (PyObject *namespace)
 {
-    NebModuleType_Initialize (namespace);
+    typedef void (*inittype) (PyObject *);
+
+    inittype initializers[] =
+    {
+        NebModuleType_Initialize,
+        NebProcessType_Initialize,
+        NULL
+    };
+
+    int i;
+
+    for (i = 0; initializers[i] != NULL; ++i)
+    {
+        initializers[i] (namespace);
+    }
 
     return Py_True;
 }
@@ -104,7 +120,6 @@ static PyObject *nebmodule_init_usermodule (
 
     if (usermodule == NULL)
     {
-        nebmodule_log_error ("Impossible to load user module");
         nebmodule_log_exception ();
         return Py_False;
     }
@@ -140,15 +155,25 @@ static int nebmodule_callback (int event_type, void *data)
     PyObject *nebcallback = PyInt_FromLong (event_type);
     
     PyObject *evhandler = PyDict_GetItem (nebcallbacks, nebcallback);
+    char *evhandlerstr = PyString_AsString (evhandler);
 
+    Py_DECREF (evhandler);
     Py_DECREF (nebcallback);
     Py_DECREF (nebcallbacks);
 
     /* execute handler */
-    ret = PyObject_CallMethod (
-        handle, PyString_AsString (evhandler),
-        "O&", data
-    );
+    if (PyObject_HasAttrString (handle, evhandlerstr))
+    {
+        ret = PyObject_CallMethod (handle, evhandlerstr, "O&", data);
+    }
+    else
+    {
+        PyErr_Format (
+            PyExc_NotImplementedError,
+            "No handler for event type: %s",
+            evhandlerstr
+        );
+    }
 
     if (ret == NULL)
     {
