@@ -8,4 +8,4 @@ libnagios_python_broker_la_SOURCES = \
     src/nebmodule.c src/nebmodule.h \
     src/nebprocess.c src/nebprocess.h
 
-EXTRA_DIST = CHANGES LICENSE README.rst
+EXTRA_DIST = AUTHORS LICENSE README.rst
