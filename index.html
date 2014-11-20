@@ -47,21 +47,22 @@
 Python Object, and will be transmitted to the event handler implemented in Python.</p>
 
 <h2>
-<a id="how-to-build" class="anchor" href="#how-to-build" aria-hidden="true"><span class="octicon octicon-link"></span></a>How to build</h2>
+<a id="how-to-install" class="anchor" href="#how-to-install" aria-hidden="true"><span class="octicon octicon-link"></span></a>How to install</h2>
 
 <pre><code>./bootsrap
-./configure
+./configure --prefix=/usr/local/nagios
 make
+make install
 </code></pre>
 
-<p>The <strong>Nagios</strong> module will be available at <code>.libs/libnagios-python-broker.so</code>.</p>
+<p>The <strong>Nagios</strong> module will be available at <code>/usr/local/nagios/lib/libnagios-python-broker.so</code>.</p>
 
 <h2>
 <a id="configuration" class="anchor" href="#configuration" aria-hidden="true"><span class="octicon octicon-link"></span></a>Configuration</h2>
 
 <p>Add this line to your <code>nagios.cfg</code> :</p>
 
-<pre><code>broker_module = /path/to/libnagios-python-broker.so mypython.package
+<pre><code>broker_module = /usr/local/nagios/lib/libnagios-python-broker.so mypython.package
 </code></pre>
 
 <p>Make sure <code>event_broker_options</code> is set to <code>-1</code>.</p>
