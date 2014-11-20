@@ -21,23 +21,36 @@
  * SOFTWARE.
  */
 
-#include "nebprocess.h"
 #include "nebhostcheck.h"
-#include "nagioshost.h"
+/* #include "nagioshost.h" -- not yet implemented */
 #include <structmember.h>
-
-struct _NebHostCheck
-{
-    NebProcess parent;
-
-    nebstruct_host_check_data *hostcheck;
-    PyObject *host;
-};
 
 /* methods */
 static void NebHostCheck_dealloc (NebHostCheck *self);
 static PyObject *NebHostCheck_new (PyTypeObject *type, PyObject *args, PyObject *kwargs);
 static int NebHostCheck_init (NebHostCheck *self, PyObject *args, PyObject *kwargs);
+
+/* properties */
+static PyObject *NebHostCheck_get_host (NebHostCheck *self);
+static PyObject *NebHostCheck_get_hostname (NebHostCheck *self);
+static PyObject *NebHostCheck_get_current_attempt (NebHostCheck *self);
+static PyObject *NebHostCheck_get_max_attempts (NebHostCheck *self);
+static PyObject *NebHostCheck_get_check_type (NebHostCheck *self);
+static PyObject *NebHostCheck_get_state_type (NebHostCheck *self);
+static PyObject *NebHostCheck_get_state (NebHostCheck *self);
+static PyObject *NebHostCheck_get_command_name (NebHostCheck *self);
+static PyObject *NebHostCheck_get_command_args (NebHostCheck *self);
+static PyObject *NebHostCheck_get_command_line (NebHostCheck *self);
+static PyObject *NebHostCheck_get_start_time (NebHostCheck *self);
+static PyObject *NebHostCheck_get_end_time (NebHostCheck *self);
+static PyObject *NebHostCheck_get_exec_time (NebHostCheck *self);
+static PyObject *NebHostCheck_get_latency (NebHostCheck *self);
+static PyObject *NebHostCheck_get_timeout (NebHostCheck *self);
+static PyObject *NebHostCheck_get_early_timeout (NebHostCheck *self);
+static PyObject *NebHostCheck_get_return_code (NebHostCheck *self);
+static PyObject *NebHostCheck_get_output (NebHostCheck *self);
+static PyObject *NebHostCheck_get_long_output (NebHostCheck *self);
+static PyObject *NebHostCheck_get_perfdata (NebHostCheck *self);
 
 /* vtables */
 static PyMethodDef NebHostCheck_methods[] =
@@ -52,10 +65,30 @@ static PyMemberDef NebHostCheck_members[] =
 
 static PyGetSetDef NebHostCheck_getseters[] =
 {
+    { "host", (getter) NebHostCheck_get_host, NULL, "nebmodule.host", NULL },
+    { "hostname", (getter) NebHostCheck_get_hostname, NULL, "nebmodule.hostname", NULL },
+    { "current_attempt", (getter) NebHostCheck_get_current_attempt, NULL, "nebmodule.current_attempt", NULL },
+    { "max_attempts", (getter) NebHostCheck_get_max_attempts, NULL, "nebmodule.max_attempts", NULL },
+    { "check_type", (getter) NebHostCheck_get_check_type, NULL, "nebmodule.check_type", NULL },
+    { "state_type", (getter) NebHostCheck_get_state_type, NULL, "nebmodule.state_type", NULL },
+    { "state", (getter) NebHostCheck_get_state, NULL, "nebmodule.state", NULL },
+    { "command_name", (getter) NebHostCheck_get_command_name, NULL, "nebmodule.command_name", NULL },
+    { "command_args", (getter) NebHostCheck_get_command_args, NULL, "nebmodule.command_args", NULL },
+    { "command_line", (getter) NebHostCheck_get_command_line, NULL, "nebmodule.command_line", NULL },
+    { "start_time", (getter) NebHostCheck_get_start_time, NULL, "nebmodule.start_time", NULL },
+    { "end_time", (getter) NebHostCheck_get_end_time, NULL, "nebmodule.end_time", NULL },
+    { "exec_time", (getter) NebHostCheck_get_exec_time, NULL, "nebmodule.exec_time", NULL },
+    { "latency", (getter) NebHostCheck_get_latency, NULL, "nebmodule.latency", NULL },
+    { "timeout", (getter) NebHostCheck_get_timeout, NULL, "nebmodule.timeout", NULL },
+    { "early_timeout", (getter) NebHostCheck_get_early_timeout, NULL, "nebmodule.early_timeout", NULL },
+    { "return_code", (getter) NebHostCheck_get_return_code, NULL, "nebmodule.return_code", NULL },
+    { "output", (getter) NebHostCheck_get_output, NULL, "nebmodule.output", NULL },
+    { "long_output", (getter) NebHostCheck_get_long_output, NULL, "nebmodule.long_output", NULL },
+    { "perfdata", (getter) NebHostCheck_get_perfdata, NULL, "nebmodule.perfdata", NULL },
     { NULL }
 };
 
-static PyTypeObject _NebHostCheckType =
+PyTypeObject NebHostCheckType =
 {
     PyObject_HEAD_INIT (NULL)
     0,
@@ -88,7 +121,7 @@ static PyTypeObject _NebHostCheckType =
     NebHostCheck_methods,
     NebHostCheck_members,
     NebHostCheck_getseters,
-    (PyObject *) (NebProcessType),
+    (PyTypeObject *) (&NebProcessType),
     0,                                  /* tp_dict */
     0,                                  /* tp_descr_get */
     0,                                  /* tp_descr_set */
@@ -98,36 +131,34 @@ static PyTypeObject _NebHostCheckType =
     NebHostCheck_new
 };
 
-PyTypeObject *NebHostCheckType = &_NebHostCheckType
-
 /* implementation */
 
 void NebHostCheckType_Initialize (PyObject *namespace)
 {
     NebProcessType_Initialize (namespace);
 
-    if (PyType_Ready (NebHostCheckType) < 0)
+    if (PyType_Ready (&NebHostCheckType) < 0)
     {
         return;
     }
 
-    Py_INCREF (NebHostCheckType);
-    PyModule_AddObject (namespace, "NebHostCheck", (PyObject *) (NebHostCheckType));
+    Py_INCREF (&NebHostCheckType);
+    PyModule_AddObject (namespace, "NebHostCheck", (PyObject *) (&NebHostCheckType));
 }
 
 static void NebHostCheck_dealloc (NebHostCheck *self)
 {
     Py_XDECREF (self->host);
-    NebProcessType->tp_dealloc (self);
+    NebProcessType.tp_dealloc ((PyObject *) self);
 }
 
 static PyObject *NebHostCheck_new (PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    NebHostCheck *self = (NebHostCheck *) NebProcessType->tp_new (type, args, kwargs);
+    NebHostCheck *self = (NebHostCheck *) NebProcessType.tp_new (type, args, kwargs);
 
     if (self != NULL)
     {
-        self->hostcheck = NULL;
+        self->data = NULL;
         self->host = NULL;
     }
 
@@ -136,13 +167,230 @@ static PyObject *NebHostCheck_new (PyTypeObject *type, PyObject *args, PyObject 
 
 static int NebHostCheck_init (NebHostCheck *self, PyObject *args, PyObject *kwargs)
 {
-    int ret = NebProcessType->tp_init (self, args, kwargs);
+    int ret = NebProcessType.tp_init ((PyObject *) self, args, kwargs);
 
     if (ret == 0)
     {
-        self->hostcheck = (nebstruct_host_check_data *) self->parent.data;
-        self->host = NagiosHost_New (self->hostcheck->object_ptr);
+        self->data = (nebstruct_host_check_data *) self->parent.data;
+
+        /* TODO:
+         * self->host = NagiosHost_New (self->data->object_ptr);
+         */
     }
 
     return ret;
+}
+
+static PyObject *NebHostCheck_get_host (NebHostCheck *self)
+{
+    if (self->host)
+    {
+        Py_INCREF (self->host);
+    }
+
+    return self->host;
+}
+
+static PyObject *NebHostCheck_get_hostname (NebHostCheck *self)
+{
+    if (self->data)
+    {
+        return PyString_FromString (self->data->host_name);
+    }
+
+    return NULL;
+}
+
+static PyObject *NebHostCheck_get_current_attempt (NebHostCheck *self)
+{
+    if (self->data)
+    {
+        return PyInt_FromLong (self->data->current_attempt);
+    }
+
+    return NULL;
+}
+
+static PyObject *NebHostCheck_get_max_attempts (NebHostCheck *self)
+{
+    if (self->data)
+    {
+        return PyInt_FromLong (self->data->max_attempts);
+    }
+
+    return NULL;
+}
+
+static PyObject *NebHostCheck_get_check_type (NebHostCheck *self)
+{
+    if (self->data)
+    {
+        return PyInt_FromLong (self->data->check_type);
+    }
+
+    return NULL;
+}
+
+static PyObject *NebHostCheck_get_state_type (NebHostCheck *self)
+{
+    if (self->data)
+    {
+        return PyInt_FromLong (self->data->state_type);
+    }
+
+    return NULL;
+}
+
+static PyObject *NebHostCheck_get_state (NebHostCheck *self)
+{
+    if (self->data)
+    {
+        return PyInt_FromLong (self->data->state);
+    }
+
+    return NULL;
+}
+
+static PyObject *NebHostCheck_get_command_name (NebHostCheck *self)
+{
+    if (self->data)
+    {
+        return PyString_FromString (self->data->command_name);
+    }
+
+    return NULL;
+}
+
+static PyObject *NebHostCheck_get_command_args (NebHostCheck *self)
+{
+    if (self->data)
+    {
+        return PyString_FromString (self->data->command_args);
+    }
+
+    return NULL;
+}
+
+static PyObject *NebHostCheck_get_command_line (NebHostCheck *self)
+{
+    if (self->data)
+    {
+        return PyString_FromString (self->data->command_line);
+    }
+
+    return NULL;
+}
+
+static PyObject *NebHostCheck_get_start_time (NebHostCheck *self)
+{
+    if (self->data)
+    {
+        return PyInt_FromLong (self->data->start_time.tv_sec);
+    }
+
+    return NULL;
+}
+
+static PyObject *NebHostCheck_get_end_time (NebHostCheck *self)
+{
+    if (self->data)
+    {
+        return PyInt_FromLong (self->data->end_time.tv_sec);
+    }
+
+    return NULL;
+}
+
+static PyObject *NebHostCheck_get_exec_time (NebHostCheck *self)
+{
+    if (self->data)
+    {
+        return PyFloat_FromDouble (self->data->execution_time);
+    }
+
+    return NULL;
+}
+
+static PyObject *NebHostCheck_get_latency (NebHostCheck *self)
+{
+    if (self->data)
+    {
+        return PyFloat_FromDouble (self->data->latency);
+    }
+
+    return NULL;
+}
+
+static PyObject *NebHostCheck_get_timeout (NebHostCheck *self)
+{
+    if (self->data)
+    {
+        return PyInt_FromLong (self->data->timeout);
+    }
+
+    return NULL;
+}
+
+static PyObject *NebHostCheck_get_early_timeout (NebHostCheck *self)
+{
+    if (self->data)
+    {
+        return self->data->early_timeout ? Py_True : Py_False;
+    }
+
+    return NULL;
+}
+
+static PyObject *NebHostCheck_get_return_code (NebHostCheck *self)
+{
+    if (self->data)
+    {
+        return PyInt_FromLong (self->data->return_code);
+    }
+
+    return NULL;
+}
+
+static PyObject *NebHostCheck_get_output (NebHostCheck *self)
+{
+    if (self->data)
+    {
+        return PyString_FromString (self->data->output);
+    }
+
+    return NULL;
+}
+
+static PyObject *NebHostCheck_get_long_output (NebHostCheck *self)
+{
+    if (self->data)
+    {
+        return PyString_FromString (self->data->long_output);
+    }
+
+    return NULL;
+}
+
+static PyObject *NebHostCheck_get_perfdata (NebHostCheck *self)
+{
+    if (self->data)
+    {
+        return PyString_FromString (self->data->perf_data);
+    }
+
+    return NULL;
+}
+
+PyObject *NebHostCheck_New (nebstruct_host_check_data *data)
+{
+    PyObject *arguments = Py_BuildValue ("(0&)", data);
+
+    PyObject *self = PyObject_CallObject (
+        (PyObject *) (&NebHostCheckType),
+        arguments
+    );
+
+    Py_DECREF (arguments);
+
+    return self;
 }

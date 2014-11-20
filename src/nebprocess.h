@@ -27,8 +27,14 @@
 #include <nagios/nebstructs.h>
 #include <Python.h>
 
-extern PyTypeObject *NebProcessType;
+extern PyTypeObject NebProcessType;
 typedef struct _NebProcess NebProcess;
+struct _NebProcess
+{
+    PyObject_HEAD
+
+    nebstruct_process_data *data;
+};
 
 void NebProcessType_Initialize (PyObject *namespace);
 PyObject *NebProcess_New (nebstruct_process_data *data);

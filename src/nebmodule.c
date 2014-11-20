@@ -24,13 +24,6 @@
 #include "nebmodule.h"
 #include <structmember.h>
 
-struct _NebModule
-{
-    PyObject_HEAD
-
-    nebmodule *handle;
-};
-
 /* methods */
 static void NebModule_dealloc (NebModule *self);
 static PyObject *NebModule_new (PyTypeObject *type, PyObject *args, PyObject *kwargs);
@@ -66,7 +59,7 @@ static PyGetSetDef NebModule_getseters[] =
     { NULL }
 };
 
-static PyTypeObject _NebModuleType =
+PyTypeObject NebModuleType =
 {
     PyObject_HEAD_INIT (NULL)
     0,
@@ -109,19 +102,17 @@ static PyTypeObject _NebModuleType =
     NebModule_new
 };
 
-PyTypeObject *NebModuleType = &_NebModuleType;
-
 /* implementation */
 
 void NebModuleType_Initialize (PyObject *namespace)
 {
-    if (PyType_Ready (NebModuleType) < 0)
+    if (PyType_Ready (&NebModuleType) < 0)
     {
         return;
     }
 
-    Py_INCREF (NebModuleType);
-    PyModule_AddObject (namespace, "NebModule", (PyObject *) (NebModuleType));
+    Py_INCREF (&NebModuleType);
+    PyModule_AddObject (namespace, "NebModule", (PyObject *) (&NebModuleType));
 }
 
 static void NebModule_dealloc (NebModule *self)

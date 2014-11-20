@@ -24,13 +24,6 @@
 #include "nebprocess.h"
 #include <structmember.h>
 
-struct _NebProcess
-{
-    PyObject_HEAD
-
-    nebstruct_process_data *data;
-};
-
 /* methods */
 static void NebProcess_dealloc (NebProcess *self);
 static PyObject *NebProcess_new (PyTypeObject *type, PyObject *args, PyObject *kwargs);
@@ -62,7 +55,7 @@ static PyGetSetDef NebProcess_getseters[] =
     { NULL }
 };
 
-static PyTypeObject _NebProcessType =
+PyTypeObject NebProcessType =
 {
     PyObject_HEAD_INIT (NULL)
     0,
@@ -105,19 +98,17 @@ static PyTypeObject _NebProcessType =
     NebProcess_new
 };
 
-PyTypeObject *NebProcessType = &_NebProcessType;
-
 /* implementation */
 
 void NebProcessType_Initialize (PyObject *namespace)
 {
-    if (PyType_Ready (NebProcessType) < 0)
+    if (PyType_Ready (&NebProcessType) < 0)
     {
         return;
     }
 
-    Py_INCREF (NebProcessType);
-    PyModule_AddObject (namespace, "NebProcess", (PyObject *) (NebProcessType));
+    Py_INCREF (&NebProcessType);
+    PyModule_AddObject (namespace, "NebProcess", (PyObject *) (&NebProcessType));
 }
 
 static void NebProcess_dealloc (NebProcess *self)
@@ -194,7 +185,7 @@ PyObject *NebProcess_New (nebstruct_process_data *data)
     PyObject *arguments = Py_BuildValue ("(0&)", data);
 
     PyObject *self = PyObject_CallObject (
-        (PyObject *) (NebProcessType),
+        (PyObject *) (&NebProcessType),
         arguments
     );
 

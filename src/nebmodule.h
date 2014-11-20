@@ -28,8 +28,14 @@
 #include <nagios/nebmodules.h>
 #include <Python.h>
 
-extern PyTypeObject *NebModuleType;
+extern PyTypeObject NebModuleType;
 typedef struct _NebModule NebModule;
+struct _NebModule
+{
+    PyObject_HEAD
+
+    nebmodule *handle;
+};
 
 void NebModuleType_Initialize (PyObject *namespace);
 PyObject *NebModule_New (nebmodule *handle);

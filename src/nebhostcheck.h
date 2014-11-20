@@ -27,8 +27,18 @@
 #include <nagios/nebstructs.h>
 #include <Python.h>
 
-extern PyTypeObject *NebHostCheckType;
+#include "nebprocess.h"
+ 
+extern PyTypeObject NebHostCheckType;
 typedef struct _NebHostCheck NebHostCheck;
+struct _NebHostCheck
+{
+    NebProcess parent;
+
+    nebstruct_host_check_data *data;
+    PyObject *host;
+};
+
 
 void NebHostCheckType_Initialize (PyObject *namespace);
 PyObject *NebHostCheck_New (nebstruct_host_check_data *data);
