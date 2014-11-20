@@ -12,16 +12,17 @@ Technical Description
 Using the C API of Python, all data received in the broker is translated to a
 Python Object, and will be transmitted to the event handler implemented in Python.
 
-How to build
-------------
+How to install
+--------------
 
 .. code-block:: bash
 
    ./bootsrap
-   ./configure
+   ./configure --prefix=/usr/local/nagios
    make
+   make install
 
-The **Nagios** module will be available at ``.libs/libnagios-python-broker.so``.
+The **Nagios** module will be available at ``/usr/local/nagios/lib/libnagios-python-broker.so``.
 
 Configuration
 -------------
