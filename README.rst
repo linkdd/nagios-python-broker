@@ -31,6 +31,6 @@ Add this line to your ``nagios.cfg`` :
 
 .. code-block:: ini
 
-   broker_module = /path/to/libnagios-python-broker.so mypython.package
+   broker_module = /usr/local/nagios/lib/libnagios-python-broker.so mypython.package
 
 Make sure ``event_broker_options`` is set to ``-1``.
