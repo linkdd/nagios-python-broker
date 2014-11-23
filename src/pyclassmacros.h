@@ -12,14 +12,21 @@
 #define PYCLASS_DEF_GETPROP(type,name,ptr,transform)    \
     static PyObject* type##_get_##name (type *self)     \
     {                                                   \
-        return transform (self->ptr);                 \
+        return transform (self->ptr);                   \
     }
+
+#define PYCLASS_DEF_GETPROP_WITH_CODE(type,name)        \
+    static PyObject* type##_get_##name (type *self)
+
 
 #define PYCLASS_DEF_SETPROP(type,name,ptr,transform)            \
     static void type##_set_##name (type *self, PyObject *obj)   \
     {                                                           \
-        self->ptr = transform (obj);                          \
+        self->ptr = transform (obj);                            \
     }
+
+#define PYCLASS_DEF_SETPROP_WITH_CODE(type,name)                \
+    static void type##_set_##name (type *self, PyObject *obj)
 
 #define PYCLASS_ADD_PROP(name,getfunc,setfunc,doc)      \
     {                                                   \

@@ -21,11 +21,14 @@
  * SOFTWARE.
  */
 
+#include <Python.h>
+
 #include "module.h"
 #include "logging.h"
+
 #include "nebmodule.h"
 #include "nebprocess.h"
-#include <Python.h>
+#include "nebhostcheck.h"
 
 static PyObject *nebmodule_init_constants (PyObject *namespace)
 {
@@ -95,6 +98,7 @@ static PyObject *nebmodule_init_types (PyObject *namespace)
     {
         NebModuleType_Initialize,
         NebProcessType_Initialize,
+        NebHostCheckType_Initialize,
         NULL
     };
 
