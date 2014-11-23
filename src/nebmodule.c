@@ -22,6 +22,7 @@
  */
 
 #include "nebmodule.h"
+#include "pyclassmacros.h"
 #include <structmember.h>
 
 /* methods */
@@ -34,9 +35,9 @@ static PyObject *NebModule_is_currently_loaded (NebModule *self);
 static PyObject *NebModule_call (NebModule *self, PyObject *args, PyObject *kwargs);
 
 /* properties */
-static PyObject *NebModule_get_filename (NebModule *self);
-static PyObject *NebModule_get_args (NebModule *self);
-static PyObject *NebModule_get_threadid (NebModule *self);
+PYCLASS_DECL_GETPROP (NebModule, filename);
+PYCLASS_DECL_GETPROP (NebModule, args);
+PYCLASS_DECL_GETPROP (NebModule, threadid);
 
 /* vtables */
 static PyMethodDef NebModule_methods[] =
@@ -53,9 +54,9 @@ static PyMemberDef NebModule_members[] =
 
 static PyGetSetDef NebModule_getseters[] =
 {
-    { "filename", (getter) NebModule_get_filename, NULL, "nebmodule.filename", NULL },
-    { "args",     (getter) NebModule_get_args,     NULL, "nebmodule.args",     NULL },
-    { "threadid", (getter) NebModule_get_threadid, NULL, "nebmodule.threadid", NULL },
+    PYCLASS_ADD_PROP ("filename", PYCLASS_GETPROP (NebModule, filename), NULL, "nebmodule.filename"),
+    PYCLASS_ADD_PROP ("args", PYCLASS_GETPROP (NebModule, args), NULL, "nebmodule.args"),
+    PYCLASS_ADD_PROP ("threadid", PYCLASS_GETPROP (NebModule, threadid), NULL, "nebmodule.thread_id"),
     { NULL }
 };
 
@@ -144,41 +145,9 @@ static int NebModule_init (NebModule *self, PyObject *args, PyObject *kwargs)
     return 0;
 }
 
-static PyObject *NebModule_get_filename (NebModule *self)
-{
-    if (self->handle)
-    {
-        return PyString_FromString (self->handle->filename);
-    }
-
-    return NULL;
-}
-
-static PyObject *NebModule_get_args (NebModule *self)
-{
-    if (self->handle)
-    {
-        return PyString_FromString (self->handle->args);
-    }
-
-    return NULL;
-}
-
-static PyObject *NebModule_get_threadid (NebModule *self)
-{
-    if (self->handle)
-    {
-#ifdef HAVE_PTHREAD_H
-        int tid = self->handle->thread_id;
-#else
-        int tid = -1;
-#endif
-
-        return PyInt_FromLong (tid);
-    }
-
-    return NULL;
-}
+PYCLASS_DEF_GETPROP (NebModule, filename, handle->filename, PyString_FromString)
+PYCLASS_DEF_GETPROP (NebModule, args, handle->args, PyString_FromString)
+PYCLASS_DEF_GETPROP (NebModule, threadid, handle->thread_id, PyInt_FromLong)
 
 static PyObject *NebModule_should_be_loaded (NebModule *self)
 {

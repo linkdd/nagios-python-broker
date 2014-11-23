@@ -2,7 +2,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 lib_LTLIBRARIES = libnagios-python-broker.la
 
-libnagios_python_broker_la_SOURCES = \
+libnagios_python_broker_la_SOURCES = src/pyclassmacros.h \
     src/module.c src/module.h \
     src/logging.c src/logging.h \
     src/nebmodule.c src/nebmodule.h \

@@ -22,6 +22,7 @@
  */
 
 #include "nebprocess.h"
+#include "pyclassmacros.h"
 #include <structmember.h>
 
 /* methods */
@@ -30,10 +31,10 @@ static PyObject *NebProcess_new (PyTypeObject *type, PyObject *args, PyObject *k
 static int NebProcess_init (NebProcess *self, PyObject *args, PyObject *kwargs);
 
 /* properties */
-static PyObject *NebProcess_get_type (NebProcess *self);
-static PyObject *NebProcess_get_flags (NebProcess *self);
-static PyObject *NebProcess_get_attr (NebProcess *self);
-static PyObject *NebProcess_get_timestamp (NebProcess *self);
+PYCLASS_DECL_GETPROP (NebProcess, type);
+PYCLASS_DECL_GETPROP (NebProcess, flags);
+PYCLASS_DECL_GETPROP (NebProcess, attr);
+PYCLASS_DECL_GETPROP (NebProcess, timestamp);
 
 /* vtables */
 static PyMethodDef NebProcess_methods[] =
@@ -48,10 +49,10 @@ static PyMemberDef NebProcess_members[] =
 
 static PyGetSetDef NebProcess_getseters[] =
 {
-    {"type",      (getter) NebProcess_get_type,      NULL, "nebstruct_process_data.type",      NULL},
-    {"flags",     (getter) NebProcess_get_flags,     NULL, "nebstruct_process_data.flags",     NULL},
-    {"attr",      (getter) NebProcess_get_attr,      NULL, "nebstruct_process_data.attr",      NULL},
-    {"timestamp", (getter) NebProcess_get_timestamp, NULL, "nebstruct_process_data.timestamp", NULL},
+    PYCLASS_ADD_PROP ("type", PYCLASS_GETPROP (NebProcess, type), NULL, "nebstruct_process_data.type"),
+    PYCLASS_ADD_PROP ("flags", PYCLASS_GETPROP (NebProcess, flags), NULL, "nebstruct_process_data.flags"),
+    PYCLASS_ADD_PROP ("attr", PYCLASS_GETPROP (NebProcess, attr), NULL, "nebstruct_process_data.attr"),
+    PYCLASS_ADD_PROP ("timestamp", PYCLASS_GETPROP (NebProcess, timestamp), NULL, "nebstruct_process_data.timestamp"),
     { NULL }
 };
 
@@ -140,45 +141,10 @@ static int NebProcess_init (NebProcess *self, PyObject *args, PyObject *kwargs)
     return 0;
 }
 
-static PyObject *NebProcess_get_type (NebProcess *self)
-{
-    if (self->data)
-    {
-        return PyInt_FromLong (self->data->type);
-    }
-
-    return NULL;
-}
-
-static PyObject *NebProcess_get_flags (NebProcess *self)
-{
-    if (self->data)
-    {
-        return PyInt_FromLong (self->data->flags);
-    }
-
-    return NULL;
-}
-
-static PyObject *NebProcess_get_attr (NebProcess *self)
-{
-    if (self->data)
-    {
-        return PyInt_FromLong (self->data->attr);
-    }
-
-    return NULL;
-}
-
-static PyObject *NebProcess_get_timestamp (NebProcess *self)
-{
-    if (self->data)
-    {
-        return PyInt_FromLong (self->data->timestamp.tv_sec);
-    }
-
-    return NULL;
-}
+PYCLASS_DEF_GETPROP (NebProcess, type, data->type, PyInt_FromLong)
+PYCLASS_DEF_GETPROP (NebProcess, flags, data->flags, PyInt_FromLong)
+PYCLASS_DEF_GETPROP (NebProcess, attr, data->attr, PyInt_FromLong)
+PYCLASS_DEF_GETPROP (NebProcess, timestamp, data->timestamp.tv_sec, PyInt_FromLong)
 
 PyObject *NebProcess_New (nebstruct_process_data *data)
 {

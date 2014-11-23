@@ -28,6 +28,12 @@
 #include <Python.h>
 
 typedef struct _NagiosHost NagiosHost;
+struct _NagiosHost
+{
+    PyObject_HEAD
+
+    host *data;
+};
 
 void NagiosHostType_Initialize (PyObject *namespace);
 PyObject *NagiosHost_New (host *data);
