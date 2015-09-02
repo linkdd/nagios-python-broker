@@ -12,6 +12,7 @@ AC_PROG_LIBTOOL
 
 # Checks for libraries
 PKG_CHECK_MODULES(PYTHON, [python])
+AC_PYTHON_MODULE(jinja2)
 
 CFLAGS="$CFLAGS $PYTHON_CFLAGS -I include"
 LDFLAGS="$LDFLAGS $PYTHON_LDFLAGS -module -avoid-version -shared"

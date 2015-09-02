@@ -22,7 +22,7 @@
  */
 
 #include "nebmodule.h"
-#include "pyclassmacros.h"
+#include <pyclassmacros.h>
 #include <structmember.h>
 
 /* methods */

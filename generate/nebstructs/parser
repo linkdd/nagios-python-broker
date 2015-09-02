@@ -1,0 +1,82 @@
+#!/bin/bash
+
+nebstructs="$1"
+
+if [ "x$nebstructs" == "x" ] || [ ! -e "$nebstructs" ]
+then
+    exit 1
+fi
+
+function parse_cline() {
+    structname=$1
+    cline=$2
+
+    if [ "x$cline" == "x" ]
+    then
+        return
+    fi
+
+    echo "$cline" | grep "typedef struct" >/dev/null
+    if [ $? -eq 0 ]
+    then
+        echo "STRUCT:${structname#nebstruct_}:BEGIN"
+        return
+    fi
+
+    echo "$cline" | grep "}${structname}_data;" >/dev/null
+    if [ $? -eq 0 ]
+    then
+        echo "STRUCT:${structname#nebstruct_}:END"
+        return
+    fi
+
+    ftype=$(echo $cline | cut -d' ' -f1 | tr -d '[:space:]')
+
+    if [ "$ftype" == "struct" ] || [ "$ftype" == "unsigned" ] || [ "$ftype" == "signed" ]
+    then
+        ftype2=$(echo $cline | cut -d' ' -f2 | tr -d '[:space:]')
+        ftype="$ftype $ftype2"
+        fname=$(echo $cline | cut -d' ' -f3- | tr -d '[:space:];')
+    else
+        fname=$(echo $cline | cut -d' ' -f2- | tr -d '[:space:];')
+    fi
+
+    if [[ $fname == \** ]]
+    then
+        ftype="$ftype *"
+        fname=${fname#\*}
+    fi
+
+    echo "STRUCT:${structname#nebstruct_}:FIELD:TYPE:$ftype:NAME:$fname"
+
+}
+function list_structs() {
+    cat $nebstructs | grep -n "typedef struct" | while read line
+    do
+        lineno=$(echo $line | cut -d':' -f1)
+        structname=$(echo $line | cut -d' ' -f3)
+        structname=${structname%_struct{}
+        structname=${structname%_data}
+
+        echo "$lineno:$structname"
+    done
+}
+
+function iter_structs() {
+    list_structs | while read line
+    do
+        lineno=$(echo $line | cut -d':' -f1)
+        structname=$(echo $line | cut -d':' -f2)
+        endlineno=$(cat $nebstructs | grep -n "\}${structname}_data\;" | cut -d':' -f1)
+
+        let "diff = $endlineno - $lineno"
+
+        cat $nebstructs | grep -B$diff "\}${structname}_data\;" | while read cline
+        do
+            cline=$(echo $cline | cut -d'/' -f1)
+            parse_cline "$structname" "$cline"
+        done
+    done
+}
+
+iter_structs

@@ -21,26 +21,11 @@
  * SOFTWARE.
  */
 
-#ifndef __PYCLASS_NEB_HOSTCHECK_H
-#define __PYCLASS_NEB_HOSTCHECK_H
+#include "nebstructs.h"
 
-#include <nagios/nebstructs.h>
-#include <Python.h>
-
-#include "nebprocess.h"
- 
-extern PyTypeObject NebHostCheckType;
-typedef struct _NebHostCheck NebHostCheck;
-struct _NebHostCheck
+void NebStructTypes_Initialize (PyObject *namespace)
 {
-    NebProcess parent;
-
-    nebstruct_host_check_data *data;
-    PyObject *host;
-};
-
-
-void NebHostCheckType_Initialize (PyObject *namespace);
-PyObject *NebHostCheck_New (nebstruct_host_check_data *data);
-
-#endif /* __PYCLASS_NEB_HOSTCHECK_H */
+    {% for item in items %}
+        {{item.class.name}}Type_Initialize (namespace);
+    {% endfor %}
+}

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+MODULES=()
+MODULES[0]="nebstructs"
+
+
+function iter_modules() {
+    for module in "${MODULES[@]}"
+    do
+        echo "-- module: $module"
+        ./$module/parser ../include/nagios/$module.h > $module.structs.txt
+        ./$module/builder $module.structs.txt
+    done
+}
+
+iter_modules

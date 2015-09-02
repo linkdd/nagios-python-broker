@@ -27,8 +27,7 @@
 #include "logging.h"
 
 #include "nebmodule.h"
-#include "nebprocess.h"
-#include "nebhostcheck.h"
+#include <generated/nebstructs/nebstructs.h>
 
 static PyObject *nebmodule_init_constants (PyObject *namespace)
 {
@@ -90,6 +89,15 @@ static PyObject *nebmodule_init_constants (PyObject *namespace)
     return Py_True;
 }
 
+static PyObject *nebmodule_init_register (PyObject *namespace)
+{
+    PyObject *register_ = PyDict_New ();
+
+    PyModule_AddObject (namespace, "register", register_);
+
+    return Py_True;
+}
+
 static PyObject *nebmodule_init_types (PyObject *namespace)
 {
     typedef void (*inittype) (PyObject *);
@@ -97,8 +105,7 @@ static PyObject *nebmodule_init_types (PyObject *namespace)
     inittype initializers[] =
     {
         NebModuleType_Initialize,
-        NebProcessType_Initialize,
-        NebHostCheckType_Initialize,
+        NebStructTypes_Initialize,
         NULL
     };
 
@@ -259,6 +266,12 @@ int nebmodule_init (
     if (nebmodule_init_constants (module) == Py_False)
     {
         nebmodule_log_error ("Impossible to initialize constants");
+        return -1;
+    }
+
+    if (nebmodule_init_register (module) == Py_False)
+    {
+        nebmodule_log_error ("Impossible to initialize register");
         return -1;
     }
 

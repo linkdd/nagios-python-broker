@@ -22,3 +22,6 @@ src/.dirstamp
 src/.libs/
 src/*.lo
 src/*.o
+generate/*/build/
+generate/*.structs.txt
+generate/.pystructs

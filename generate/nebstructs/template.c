@@ -21,47 +21,53 @@
  * SOFTWARE.
  */
 
-#include "nebprocess.h"
-#include "pyclassmacros.h"
+#include "{{source.file}}.h"
+#include <pyclassmacros.h>
 #include <structmember.h>
+#include <time.h>
 
 /* methods */
-static void NebProcess_dealloc (NebProcess *self);
-static PyObject *NebProcess_new (PyTypeObject *type, PyObject *args, PyObject *kwargs);
-static int NebProcess_init (NebProcess *self, PyObject *args, PyObject *kwargs);
+void _{{class.name}}_dealloc ({{class.name}} *self);
+PyObject *_{{class.name}}_new (PyTypeObject *type, PyObject *args, PyObject *kwargs);
+int _{{class.name}}_init ({{class.name}} *self, PyObject *args, PyObject *kwargs);
 
 /* properties */
-PYCLASS_DECL_GETPROP (NebProcess, type);
-PYCLASS_DECL_GETPROP (NebProcess, flags);
-PYCLASS_DECL_GETPROP (NebProcess, attr);
-PYCLASS_DECL_GETPROP (NebProcess, timestamp);
+{% for prop in class.properties %}
+    PYCLASS_DECL_GETPROP ({{class.name}}, {{prop.name}});
+    PYCLASS_DECL_SETPROP ({{class.name}}, {{prop.name}});
+{% endfor %}
 
 /* vtables */
-static PyMethodDef NebProcess_methods[] =
+static PyMethodDef {{class.name}}_methods[] =
 {
     { NULL }
 };
 
-static PyMemberDef NebProcess_members[] =
+static PyMemberDef {{class.name}}_members[] =
 {
     { NULL }
 };
 
-static PyGetSetDef NebProcess_getseters[] =
+static PyGetSetDef {{class.name}}_getseters[] =
 {
-    PYCLASS_ADD_PROP ("type", PYCLASS_GETPROP (NebProcess, type), NULL, "nebstruct_process_data.type"),
-    PYCLASS_ADD_PROP ("flags", PYCLASS_GETPROP (NebProcess, flags), NULL, "nebstruct_process_data.flags"),
-    PYCLASS_ADD_PROP ("attr", PYCLASS_GETPROP (NebProcess, attr), NULL, "nebstruct_process_data.attr"),
-    PYCLASS_ADD_PROP ("timestamp", PYCLASS_GETPROP (NebProcess, timestamp), NULL, "nebstruct_process_data.timestamp"),
+    {% for prop in class.properties %}
+        PYCLASS_ADD_PROP(
+            "{{prop.name}}",
+            PYCLASS_GETPROP ({{class.name}}, {{prop.name}}),
+            PYCLASS_SETPROP ({{class.name}}, {{prop.name}}),
+            "{{class.name}}.{{prop.name}}"
+        ),
+    {% endfor %}
+
     { NULL }
 };
 
-PyTypeObject NebProcessType =
+PyTypeObject {{class.name}}Type =
 {
     PyObject_HEAD_INIT (NULL)
     0,
-    "NebProcess",
-    sizeof (NebProcess),
+    "{{class.name}}",
+    sizeof ({{class.name}}),
     0,                                  /* tp_itemsize */
     0,                                  /* tp_dealloc */
     0,                                  /* tp_print */
@@ -78,48 +84,50 @@ PyTypeObject NebProcessType =
     0,                                  /* tp_getattro */
     0,                                  /* tp_setattro */
     0,                                  /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,                 /* tp_flags */
-    "nebstruct_process_data wrapper",
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    "{{struct.name}} wrapper",
     0,                                  /* tp_traverse */
     0,                                  /* tp_clear */
     0,                                  /* tp_richcompare */
     0,                                  /* tp_weaklistoffset */
     0,                                  /* tp_iter */
     0,                                  /* tp_iternext */
-    NebProcess_methods,
-    NebProcess_members,
-    NebProcess_getseters,
-    0,                                  /* tp_base */
+    {{class.name}}_methods,
+    {{class.name}}_members,
+    {{class.name}}_getseters,
+    (PyTypeObject *) (&{{class.name}}Type),
     0,                                  /* tp_dict */
     0,                                  /* tp_descr_get */
     0,                                  /* tp_descr_set */
     0,                                  /* tp_dictoffset */
-    (initproc) NebProcess_init,
+    (initproc) _{{class.name}}_init,
     0,                                  /* tp_alloc */
-    NebProcess_new
+    _{{class.name}}_new
 };
 
 /* implementation */
 
-void NebProcessType_Initialize (PyObject *namespace)
+void {{class.name}}Type_Initialize (PyObject *namespace)
 {
-    if (PyType_Ready (&NebProcessType) < 0)
+    {{class.name}}Type_Initialize (namespace);
+
+    if (PyType_Ready (&{{class.name}}Type) < 0)
     {
         return;
     }
 
-    Py_INCREF (&NebProcessType);
-    PyModule_AddObject (namespace, "NebProcess", (PyObject *) (&NebProcessType));
+    Py_INCREF (&{{class.name}}Type);
+    PyModule_AddObject (namespace, "{{class.name}}", (PyObject *) (&{{class.name}}Type));
 }
 
-static void NebProcess_dealloc (NebProcess *self)
+void _{{class.name}}_dealloc ({{class.name}} *self)
 {
-    self->ob_type->tp_free ((PyObject *) self);
+    {{class.name}}Type.tp_dealloc ((PyObject *) self);
 }
 
-static PyObject *NebProcess_new (PyTypeObject *type, PyObject *args, PyObject *kwargs)
+PyObject *_{{class.name}}_new (PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    NebProcess *self = (NebProcess *) type->tp_alloc (type, 0);
+    {{class.name}} *self = ({{class.name}} *) {{class.name}}Type.tp_new (type, args, kwargs);
 
     if (self != NULL)
     {
@@ -129,7 +137,7 @@ static PyObject *NebProcess_new (PyTypeObject *type, PyObject *args, PyObject *k
     return (PyObject *) self;
 }
 
-static int NebProcess_init (NebProcess *self, PyObject *args, PyObject *kwargs)
+int _{{class.name}}_init ({{class.name}} *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = { NULL };
 
@@ -141,17 +149,39 @@ static int NebProcess_init (NebProcess *self, PyObject *args, PyObject *kwargs)
     return 0;
 }
 
-PYCLASS_DEF_GETPROP (NebProcess, type, data->type, PyInt_FromLong)
-PYCLASS_DEF_GETPROP (NebProcess, flags, data->flags, PyInt_FromLong)
-PYCLASS_DEF_GETPROP (NebProcess, attr, data->attr, PyInt_FromLong)
-PYCLASS_DEF_GETPROP (NebProcess, timestamp, data->timestamp.tv_sec, PyInt_FromLong)
+{% for prop in class.properties %}
+    {% if prop.with_code %}
+        PYCLASS_DEF_GETPROP_WITH_CODE ({{class.name}}, {{prop.name}})
+        {
+            {{prop.getcode}}
+        }
 
-PyObject *NebProcess_New (nebstruct_process_data *data)
+        PYCLASS_DEF_SETPROP_WITH_CODE ({{class.name}}, {{prop.name}})
+        {
+            {{prop.setcode}}
+        }
+    {% else %}
+        PYCLASS_DEF_GETPROP (
+            {{class.name}},
+            {{prop.name}},
+            data->{{prop.name}},
+            {{prop.getcode}}
+        )
+        PYCLASS_DEF_SETPROP (
+            {{class.name}},
+            {{prop.name}},
+            data->{{prop.name}},
+            {{prop.setcode}}
+        )
+    {% endif %}
+{% endfor %}
+
+PyObject *{{class.name}}_New ({{struct.name}} *data)
 {
     PyObject *arguments = Py_BuildValue ("(0&)", data);
 
     PyObject *self = PyObject_CallObject (
-        (PyObject *) (&NebProcessType),
+        (PyObject *) (&{{class.name}}Type),
         arguments
     );
 

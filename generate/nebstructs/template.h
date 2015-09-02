@@ -21,28 +21,22 @@
  * SOFTWARE.
  */
 
-#ifndef __PYCLASS_NAGIOS_HOST_H
-#define __PYCLASS_NAGIOS_HOST_H
+#ifndef __PYCLASS_{{source.name}}_H
+#define __PYCLASS_{{source.name}}_H
 
+#include <nagios/nebstructs.h>
 #include <nagios/objects.h>
 #include <Python.h>
 
-typedef struct _NagiosHost NagiosHost;
-struct _NagiosHost
+typedef struct _{{class.name}} {{class.name}};
+struct _{{class.name}}
 {
     PyObject_HEAD
 
-    host *data;
+    {{struct.name}} *data;
 };
 
-void NagiosHostType_Initialize (PyObject *namespace);
-PyObject *NagiosHost_New (host *data);
+void {{class.name}}Type_Initialize (PyObject *namespace);
+PyObject *{{class.name}}_New ({{struct.name}} *data);
 
-PyObject *NagiosHost_AddParent (PyObject *self, PyObject *hostname);
-PyObject *NagiosHost_AddChild (PyObject *self, PyObject *childhost);
-PyObject *NagiosHost_AddContactGroup (PyObject *self, PyObject *cgroupname);
-PyObject *NagiosHost_AddContact (PyObject *self, PyObject *contactname);
-PyObject *NagiosHost_AddCustomVariable (PyObject *self, PyObject *varname, PyObject *value);
-PyObject *NagiosHost_AddServiceLink (PyObject *self, PyObject *servicelink);
-
-#endif /* __PYCLASS_NAGIOS_HOST_H */
+#endif /* __PYCLASS_{{source.name}}_H */

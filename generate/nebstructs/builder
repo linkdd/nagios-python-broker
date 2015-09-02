@@ -1,0 +1,194 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from jinja2 import Template
+import datetime
+import sys
+import os
+
+
+camelize = lambda s: s.title().replace('_', '')
+
+
+class CPyClassBuilder(object):
+    TYPESMAP = {
+        'int': int,
+        'unsigned int': int,
+        'unsigned long': int,
+        'float': float,
+        'double': float,
+        'time_t': int,
+        'struct timeval': datetime.datetime,
+        'char *': str,
+        'void *': object
+    }
+
+    @property
+    def basedir(self):
+        return os.path.dirname(os.path.realpath(sys.argv[0]))
+
+    @property
+    def builddir(self):
+        return os.path.join(self.basedir, 'build')
+
+    def __init__(self, srcpath, *args, **kwargs):
+        super(CPyClassBuilder, self).__init__(*args, **kwargs)
+
+        self.structs = {}
+
+        with open(srcpath) as f:
+            for line in f:
+                items = line.strip('\n').split(':')
+
+                if len(items) == 3:
+                    if items[2] == 'BEGIN':
+                        self.structs[items[1]] = {}
+
+                else:
+                    struct = self.structs[items[1]]
+                    struct[items[6]] = CPyClassBuilder.TYPESMAP[items[4]]
+
+    def read_templates(self, ttype='template'):
+        path = os.path.join(self.basedir, '{0}.h'.format(ttype))
+        with open(path) as f:
+            header = Template(f.read())
+
+        path = os.path.join(self.basedir, '{0}.c'.format(ttype))
+        with open(path) as f:
+            source = Template(f.read())
+
+        return header, source
+
+    def write_outputs(self, header, source, context):
+        items = [
+            (header, 'h'),
+            (source, 'c')
+        ]
+
+        if not os.path.exists(self.builddir):
+            os.makedirs(self.builddir)
+
+        for item in items:
+            out = item[0].render(context)
+            path = os.path.join(self.builddir, '{0}.{1}'.format(
+                context['source']['file'],
+                item[1]
+            ))
+
+            with open(path, 'w') as f:
+                f.write(out)
+
+    def build_struct_context(self, structname):
+        struct = self.structs[structname]
+
+        context = {
+            'class': {
+                'name': camelize(structname),
+                'properties': [
+                    {'name': propname}
+                    for propname in struct
+                ]
+            },
+            'struct': {
+                'name': 'nebstruct_{0}_data'.format(structname)
+            },
+            'source': {
+                'name': structname.upper(),
+                'file': structname.replace('_', '-')
+            }
+        }
+
+        for prop in context['class']['properties']:
+            self.build_prop(struct, prop)
+
+        return context
+
+    def build_prop(self, struct, prop):
+        propname = prop['name']
+
+        if struct[propname] is int:
+            prop['with_code'] = False
+            prop['getcode'] = 'PyInt_FromLong'
+            prop['setcode'] = 'PyInt_AsLong'
+
+        elif struct[propname] is float:
+            prop['with_code'] = False
+            prop['getcode'] = 'PyFloat_FromDouble'
+            prop['setcode'] = 'PyFloat_AsDouble'
+
+        elif struct[propname] is str:
+            prop['with_code'] = False
+            prop['getcode'] = 'PyString_FromString'
+            prop['setcode'] = 'PyString_AsString'
+
+        elif struct[propname] is datetime.datetime:
+            prop['with_code'] = True
+            prop['getcode'] = '''
+            PyObject *ts = PyInt_FromLong (self->data->{0}.tv_sec);
+            PyObject *args = Py_BuildValue ("(O)", ts);
+            PyObject *ref = PyDateTime_FromTimestamp (args);
+            Py_DECREF (args);
+            Py_DECREF (ts);
+            return ref;
+            '''.format(propname)
+
+            prop['setcode'] = '''
+            struct tm cdatetime;
+            time_t tmp;
+
+            cdatetime.tm_sec = PyDateTime_DATE_GET_SECOND (obj);
+            cdatetime.tm_min = PyDateTime_DATE_GET_MINUTE (obj);
+            cdatetime.tm_hour = PyDateTime_DATE_GET_HOUR (obj);
+            cdatetime.tm_mday = PyDateTime_GET_DAY (obj);
+            cdatetime.tm_mon = PyDateTime_GET_MONTH (obj);
+            cdatetime.tm_year = PyDateTime_GET_YEAR (obj);
+
+            tmp = mktime(&cdatetime);
+
+            self->data->{0}.tv_sec = tmp;
+            self->data->{0}.tv_usec = PyDateTime_DATE_GET_MICROSECOND (obj);
+            '''.format(propname)
+
+        elif struct[propname] is object:
+            prop['with_code'] = True
+            prop['getcode'] = '''
+            return Py_BuildValue ("O&", self->data->{0});
+            '''.format(propname)
+
+            prop['setcode'] = '''
+            PyArg_Parse (obj, "O&", &(self->data->{0}));
+            '''.format(propname)
+
+    def compile_struct_context(self, header, source, context):
+        self.write_outputs(header, source, context)
+
+    def render_module_source(self, ctxs):
+        header, source = self.read_templates(ttype='module')
+
+        items = [
+            (header, 'nebstructs.h'),
+            (source, 'nebstructs.c'),
+        ]
+        context = {
+            'items': ctxs
+        }
+
+        for item in items:
+            out = item[0].render(context)
+
+            with open(os.path.join(self.builddir, item[1]), 'w') as f:
+                f.write(out)
+
+    def iter_structs(self):
+        header, source = self.read_templates()
+        ctxs = map(self.build_struct_context, self.structs)
+        map(
+            lambda ctx: self.compile_struct_context(header, source, ctx),
+            ctxs
+        )
+        self.render_module_source(ctxs)
+
+
+if __name__ == '__main__':
+    app = CPyClassBuilder(sys.argv[1])
+    app.iter_structs()

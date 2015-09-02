@@ -21,22 +21,13 @@
  * SOFTWARE.
  */
 
-#ifndef __PYCLASS_NEB_PROCESS_H
-#define __PYCLASS_NEB_PROCESS_H
+#ifndef __PY_NEBSTRUCTS_H
+#define __PY_NEBSTRUCTS_H
 
-#include <nagios/nebstructs.h>
-#include <Python.h>
+{% for item in items %}
+    #include "{{item.source.file}}.h"
+{% endfor %}
 
-extern PyTypeObject NebProcessType;
-typedef struct _NebProcess NebProcess;
-struct _NebProcess
-{
-    PyObject_HEAD
+void NebStructTypes_Initialize (PyObject *namespace);
 
-    nebstruct_process_data *data;
-};
-
-void NebProcessType_Initialize (PyObject *namespace);
-PyObject *NebProcess_New (nebstruct_process_data *data);
-
-#endif /* __PYCLASS_NEB_PROCESS_H */
+#endif /* __PY_NEBSTRUCTS_H */
