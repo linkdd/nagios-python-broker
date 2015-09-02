@@ -26,6 +26,8 @@
 #include <structmember.h>
 #include <time.h>
 
+ #include <datetime.h>
+
 /* methods */
 void _{{class.name}}_dealloc ({{class.name}} *self);
 PyObject *_{{class.name}}_new (PyTypeObject *type, PyObject *args, PyObject *kwargs);
@@ -109,6 +111,8 @@ PyTypeObject {{class.name}}Type =
 
 void {{class.name}}Type_Initialize (PyObject *namespace)
 {
+    PyDateTime_IMPORT;
+
     {{class.name}}Type_Initialize (namespace);
 
     if (PyType_Ready (&{{class.name}}Type) < 0)

@@ -3,4 +3,4 @@ compiler:
  - gcc
  - clang
 install: sudo apt-get install python-jinja2
-script: ./bootstrap && ./configure && make
+script: make

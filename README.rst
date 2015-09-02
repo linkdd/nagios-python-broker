@@ -17,10 +17,8 @@ How to install
 
 .. code-block:: bash
 
-   ./bootsrap
-   ./configure --prefix=/usr/local/nagios
    make
-   make install
+   make install PREFIX=/usr/local/nagios
 
 The **Nagios** module will be available at ``/usr/local/nagios/lib/libnagios-python-broker.so``.
 
