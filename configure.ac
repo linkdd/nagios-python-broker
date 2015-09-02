@@ -5,7 +5,7 @@ AM_INIT_AUTOMAKE([1.10 foreign subdir-objects])
 
 AC_CONFIG_SRCDIR([src])
 AC_CONFIG_MACRO_DIR([m4])
-AC_CONFIG_MACRO_DIRS([m4macros])
+m4_include([m4macros/pymodule.m4])
 
 # Checks for programs.
 AC_PROG_CC
