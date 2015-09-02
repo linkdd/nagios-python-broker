@@ -49,10 +49,8 @@ Python Object, and will be transmitted to the event handler implemented in Pytho
 <h2>
 <a id="how-to-install" class="anchor" href="#how-to-install" aria-hidden="true"><span class="octicon octicon-link"></span></a>How to install</h2>
 
-<pre><code>./bootsrap
-./configure --prefix=/usr/local/nagios
-make
-make install
+<pre><code>make
+make install PREFIX=/usr/local/nagios
 </code></pre>
 
 <p>The <strong>Nagios</strong> module will be available at <code>/usr/local/nagios/lib/libnagios-python-broker.so</code>.</p>
@@ -107,7 +105,7 @@ SOFTWARE.</p>
     <div id="footer_wrap" class="outer">
       <footer class="inner">
         <p class="copyright">Nagios-python-broker maintained by <a href="https://github.com/linkdd">linkdd</a></p>
-        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
       </footer>
     </div>
 
